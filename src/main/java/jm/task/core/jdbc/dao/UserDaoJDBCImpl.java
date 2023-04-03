@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class UserDaoJDBCImpl implements UserDao {
-    Connection connection = Util.getConnection();
+    private Connection connection = Util.getConnection();
 
     public UserDaoJDBCImpl() {
     }
@@ -87,7 +87,7 @@ public class UserDaoJDBCImpl implements UserDao {
             while (resultSet.next()) {
                 String name = resultSet.getString("name");
                 String lastName = resultSet.getString("lastName");
-                Byte age = resultSet.getByte("age");
+                byte age = resultSet.getByte("age");
                 users.add(new User(name, lastName, age));
             }
             ps.close();
