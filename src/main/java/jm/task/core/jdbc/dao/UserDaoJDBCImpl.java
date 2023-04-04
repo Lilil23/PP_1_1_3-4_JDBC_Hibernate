@@ -18,7 +18,7 @@ public class UserDaoJDBCImpl implements UserDao {
                 "id int not null AUTO_INCREMENT, " +
                 "name varchar(30) not null, " +
                 "lastname varchar(50) not null, " +
-                "age int, primary key (id)" + ")";
+                "age TINYINT, primary key (id)" + ")";
         try (Statement st = connection.createStatement()) {
             connection.setAutoCommit(false);
             st.executeUpdate(CREATE_TABLE);
