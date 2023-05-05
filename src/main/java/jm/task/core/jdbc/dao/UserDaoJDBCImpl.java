@@ -3,27 +3,31 @@ package jm.task.core.jdbc.dao;
 import jm.task.core.jdbc.model.User;
 import jm.task.core.jdbc.util.Util;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
 public class UserDaoJDBCImpl implements UserDao {
-    private Connection connection = Util.getConnection();
+
+    Connection connection;
 
     public UserDaoJDBCImpl() {
+        connection = Util.getConnection();
     }
 
     public void createUsersTable() throws SQLException {
-        String CREATE_TABLE = "create table if not exists user " + "(" +
-                "id int not null AUTO_INCREMENT, " +
-                "name varchar(30) not null, " +
-                "lastname varchar(50) not null, " +
-                "age TINYINT, primary key (id)" + ")";
-        try (Statement st = connection.createStatement()) {
+        try (Statement statement = connection.createStatement()) {
             connection.setAutoCommit(false);
-            st.executeUpdate(CREATE_TABLE);
+            String sql = "CREATE TABLE if not exists `users` ( `id` bigint NOT NULL AUTO_INCREMENT," +
+                    "`name` varchar(255) NOT NULL," +
+                    "`lastName` varchar(255) NOT NULL," +
+                    "`age` smallint NOT NULL, PRIMARY KEY (`id`))";
+            statement.executeUpdate(sql);
             connection.commit();
-        } catch (SQLException e) {
+        } catch (Exception e) {
             e.printStackTrace();
             connection.rollback();
         } finally {
@@ -32,32 +36,26 @@ public class UserDaoJDBCImpl implements UserDao {
     }
 
     public void dropUsersTable() throws SQLException {
-        String DROP_TABLE = "drop table if exists user";
-        try (Statement st = connection.createStatement()) {
+        try (Statement statement = connection.createStatement()) {
             connection.setAutoCommit(false);
-            st.executeUpdate(DROP_TABLE);
+            statement.executeUpdate("DROP table IF EXISTS users");
             connection.commit();
-        } catch (SQLException e) {
+        } catch (Exception e) {
             e.printStackTrace();
             connection.rollback();
-        }finally {
+        } finally {
             connection.setAutoCommit(true);
         }
-
     }
 
-
     public void saveUser(String name, String lastName, byte age) throws SQLException {
-        String INSERT_USER = "insert into user(name, lastname, age) VALUES (?,?,?)";
-        try (PreparedStatement ps = connection.prepareStatement(INSERT_USER)) {
+        try (Statement statement = connection.createStatement()) {
             connection.setAutoCommit(false);
-            ps.setString(1, name);
-            ps.setString(2, lastName);
-            ps.setByte(3, age);
-            ps.executeUpdate();
-            System.out.println("User с именем – " + name + " добавлен в базу данных");
+            String format = "INSERT INTO users (name, lastname, age) values ('%s', '%s', (%d))";
+            String sql = String.format(format, name, lastName, age);
+            statement.executeUpdate(sql);
             connection.commit();
-        } catch (SQLException e) {
+        } catch (Exception e) {
             e.printStackTrace();
             connection.rollback();
         } finally {
@@ -66,12 +64,12 @@ public class UserDaoJDBCImpl implements UserDao {
     }
 
     public void removeUserById(long id) throws SQLException {
-        String DELETE_USER = "delete from user where id = " + id;
         try (Statement statement = connection.createStatement()) {
             connection.setAutoCommit(false);
-            statement.executeUpdate(DELETE_USER);
+            String sql = "DELETE FROM users WHERE id = " + id + " LIMIT 1";
+            statement.executeUpdate(sql);
             connection.commit();
-        } catch (SQLException e) {
+        } catch (Exception e) {
             e.printStackTrace();
             connection.rollback();
         } finally {
@@ -79,34 +77,32 @@ public class UserDaoJDBCImpl implements UserDao {
         }
     }
 
-    public List<User> getAllUsers() {
-        List<User> users = new ArrayList<>();
-        String SELECT_ALL = "select * from user";
-        try (PreparedStatement ps = connection.prepareStatement(SELECT_ALL)) {
-            ResultSet resultSet = ps.executeQuery();
-            while (resultSet.next()) {
-                String name = resultSet.getString("name");
-                String lastName = resultSet.getString("lastName");
-                byte age = resultSet.getByte("age");
-                users.add(new User(name, lastName, age));
-            }
-            ps.close();
-            resultSet.close();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-
-        return users;
-    }
-
-
-    public void cleanUsersTable() throws SQLException {
-        String TRUNCATE_TABLE = "TRUNCATE TABLE user";
+    public List<User> getAllUsers() throws SQLException {
+        List<User> resultList = new ArrayList<>();
         try (Statement statement = connection.createStatement()) {
             connection.setAutoCommit(false);
-            statement.executeUpdate(TRUNCATE_TABLE);
+            ResultSet resultSet = statement.executeQuery("select name, lastName, age from users");
+            while (resultSet.next()) {
+                resultList.add(new User(resultSet.getString("name"), resultSet.getString("lastName"), resultSet.getByte("age")));
+            }
             connection.commit();
-        } catch (SQLException e) {
+        } catch (Exception e) {
+            e.printStackTrace();
+            connection.rollback();
+        } finally {
+            connection.setAutoCommit(true);
+        }
+        return resultList;
+    }
+
+    public void cleanUsersTable() throws SQLException {
+        try (Statement statement = connection.createStatement()) {
+            connection.setAutoCommit(false);
+            String sql = "TRUNCATE table users";
+            statement.executeUpdate(sql);
+
+            connection.commit();
+        } catch (Exception e) {
             e.printStackTrace();
             connection.rollback();
         } finally {

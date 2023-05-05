@@ -1,12 +1,11 @@
 package jm.task.core.jdbc.model;
 
-import javax.persistence.Column;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import javax.persistence.*;
 
-@Table(name = "user")
+@Table
 public class User {
-    @Id
+
+    @Column
     private Long id;
 
     @Column
@@ -18,16 +17,6 @@ public class User {
     @Column
     private Byte age;
 
-    @Override
-    public String toString() {
-        return "User{" +
-                "id=" + id +
-                ", name='" + name + '\'' +
-                ", lastName='" + lastName + '\'' +
-                ", age=" + age +
-                '}';
-    }
-
     public User() {
 
     }
@@ -37,6 +26,8 @@ public class User {
         this.lastName = lastName;
         this.age = age;
     }
+
+    //можно создать конструктор с айди и тогда выводить юзеров с айди
 
     public Long getId() {
         return id;
@@ -68,5 +59,13 @@ public class User {
 
     public void setAge(Byte age) {
         this.age = age;
+    }
+
+    @Override
+    public String toString() {
+        return "User" +
+                " name='" + name + '\'' +
+                ", lastName='" + lastName + '\'' +
+                ", age=" + age;
     }
 }
